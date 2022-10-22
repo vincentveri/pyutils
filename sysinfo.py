@@ -1,6 +1,7 @@
 import sys
 import os
 import platform
+import subprocess
 
 print(sys.platform)
 print(sys.version)
@@ -16,3 +17,8 @@ for directory in list_directory:
 
 operating_system = platform.system()
 print(operating_system)
+
+subprocess.run('dir', shell=True)
+
+for file in os.walk(pwd):
+    print(file)
