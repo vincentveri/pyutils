@@ -3,9 +3,11 @@ from bson.objectid import ObjectId
 from pymongo.cursor import Cursor
 from datetime import date, timedelta
 import pandas as pd
+import random
+
 
 mongo = pymongo.MongoClient('mongodb://localhost:27017/')
-db = mongo['fidelpol_prod']
+db = mongo['fidelpol']
 
 servizi = db['servizio']
 agenti = db['agente']
@@ -62,6 +64,8 @@ def get_settimana():
 
 
 def get_nd():
+    return []
+    """
     risultati = [
         ('2022-11-24', ObjectId('63775524d8cdd85258d64216')), # ROSSI MARIO
         ('2022-11-22', ObjectId('63775524d8cdd85258d64217')), # PICA PIERPAOLO
@@ -69,6 +73,7 @@ def get_nd():
         ('2022-11-24', ObjectId('6377554424f173de8f26f158')) # POLO MARCO
     ]
     return risultati
+    """
 
 
 def app():
@@ -77,7 +82,7 @@ def app():
     settimana = get_settimana()
 
     # Recupera tutti gli agenti attivi
-    agenti_attivi = list(agenti.find({}))
+    agenti_attivi = list(agenti.find({}, { '_id': 1, 'nome': 1, 'cognome': 1}))
     # Genera una lista piu' veloce solo con gli _id per un lookup rapido
     agente_indice = [x.get('_id') for x in agenti_attivi]
 
@@ -94,7 +99,9 @@ def app():
         assegnazioni.add(item)
 
     # Stabilisci i servizi da coprire
-    servizi_da_coprire = ['6377548556faf607726c6907', '6377548556faf607726c6906', '637754cbe2c12b8ac818dc25', '637779d50a9f40a69f15f96e', '637754d5b5425ba0729cdd98']
+
+    servizi_da_coprire = servizi.find({}, {'_id': 1})
+    servizi_da_coprire = [x.get('_id') for x in servizi_da_coprire]
 
     for giorno in settimana:
         for sid in servizi_da_coprire:
@@ -107,6 +114,8 @@ def app():
             else:
                 agenti_servizio = list(get_agenti_by_servizio(servizio))
                 cache_servizi_agente[sid] = agenti_servizio
+
+            # random.shuffle(agenti_servizio)   
 
             if len(agenti_servizio) > 0:
                 for x in agenti_servizio:
@@ -122,11 +131,11 @@ def app():
                     # Verifica se l'utente e' disponibile quel giorno
                     if t1 not in assegnazioni:
                         assegnazioni.add(t1)
-                        tabella_turni[idx_agente][idx_giorno] = servizio.get('descrizione')
+                        tabella_turni[idx_agente][idx_giorno] = servizio.get('descrizione').rjust(15)
                         break
 
     
-    print(pd.DataFrame(tabella_turni, columns=settimana, index=[x.get('nome') for x in agenti_attivi]))
+    print(pd.DataFrame(tabella_turni, columns=settimana, index=[f"{x.get('cognome')} {x.get('nome')}" for x in agenti_attivi]))
 
 
 if __name__ == '__main__':
