@@ -12,4 +12,3 @@ output = stdout.read()
 client.close()
 
 print(output.decode())
-
